@@ -1,89 +1,91 @@
 export interface FAQEntry {
   keywords: string[];
   answer: string;
-  followup?: string; // Optional: what to do if the problem persists
+  followup?: string;
 }
 
 export const faqAnswers: FAQEntry[] = [
   {
-    keywords: ["peak มีเสียง", "สัญญาณดัง", "peak sound", "alarm sound"],
-    answer: "🔊 ลองนำกุญแจตัดสัญญาณมาตัดก่อนครับ",
-    followup: "ถ้ายังไม่หาย ตรวจสอบว่าแบรคเก็ตแน่นหรือไม่ ถ้าไม่แน่นให้ลองประกอบใหม่อีกครั้งครับ",
+    keywords: ["peak sound", "alarm sound", "beeping sound"],
+    answer: "🔊 Try using the signal cut-off key to stop the alarm first.",
+    followup: "If the sound continues, check if the bracket is tight. If not, reassemble it properly.",
   },
   {
-    keywords: ["เปิดโต๊ะ v1 ไม่ได้", "open table v1"],
-    answer: "ให้ใช้ประแจหกเหลี่ยมเบอร์ 4 ไขรูใต้โต๊ะเพื่อเปิดครับ",
-    followup: "หากยังเปิดไม่ได้ อาจเป็นปัญหาที่ตัวโต๊ะ ให้แอดมินบันทึกไว้ในระบบครับ",
+    keywords: ["open table v1", "cannot open table v1", "table v1 stuck"],
+    answer: "Use a size 4 hex key to unscrew the hole under the table to open it.",
+    followup: "If it still doesn’t open, it might be a table issue. Please report it to the admin.",
   },
   {
-    keywords: ["เปลี่ยนป้าย v2", "placemat v2", "change sign v2"],
-    answer: "ให้นำกาวหนังไก่แปะตรงอะคริลิกแล้วดึงออกมา จะช่วยให้เปลี่ยนได้ง่ายขึ้นครับ",
+    keywords: ["placemat v2", "change sign v2", "cannot change sign"],
+    answer: "Apply masking tape on the acrylic and pull it off gently — this helps remove the sign easily.",
   },
   {
-    keywords: ["ไม่มีอุปกรณ์", "no tools", "ไม่มีหกเหลี่ยม", "missing tool"],
-    answer: "สามารถใช้อุปกรณ์จากถุงที่บริษัทเตรียมไว้ให้ได้ครับ แต่อย่าลืมนำกลับมาคืน!",
+    keywords: ["no tools", "missing tool", "no hex key", "tool not found"],
+    answer: "You can use the tools provided in the company kit bag — but don’t forget to return them afterward!",
   },
   {
-    keywords: ["เปลี่ยนโปสเตอร์ไม่ได้", "change poster"],
+    keywords: ["change poster", "poster won’t fit", "poster stuck"],
     answer:
-      "ลองถอดใส่ใหม่ให้แน่นขึ้น เพราะโปสเตอร์ใหม่จะเหนียวกว่าครับ\nหรือใช้กระดาษสีขาวยัดมุมเฟรมช่วยยึดโปสเตอร์ไว้ได้ครับ",
+      "Try reinstalling it more firmly. New posters can be tighter.\nYou can also insert white paper in the frame corners to hold the poster in place.",
   },
   {
-    keywords: ["ต่อเน็ต", "internet", "wifi", "dcota"],
-    answer: "แต่ละร้านใช้อินเตอร์เน็ตต่างกันครับ:\n- True, Dtac: ใช้ซิมที่ร้านเตรียมไว้\n- ASP, Telewiz, Jaymart, Banana: ใช้ Wi-Fi ของร้าน (ดูได้จากหน้าแรกพาโนแกรม)\n- AIS: ใช้ AIS Super Wi-Fi",
-  },
-  {
-    keywords: ["dcota อัปเดต", "dcota updating", "updating demo"],
+    keywords: ["connect internet", "internet", "wifi", "dcota wifi"],
     answer:
-      "หากขึ้นข้อความ 'กำลังดำเนินการอัปเดตการสาธิตอย่ารบกวนอุปกรณ์' หมายถึงระบบ DCOTA กำลังอัปเดตตามปกติครับ",
-    followup: "สามารถทำขั้นตอนอื่นต่อได้ หรือถ้าเสร็จงานแล้วสามารถถ่ายรูปส่งอัลบั้มได้เลยครับ",
+      "Each store uses a different internet connection:\n- True, Dtac: Use SIM cards provided by the store\n- ASP, Telewiz, Jaymart, Banana: Use the store Wi-Fi (check on the Panogram home screen)\n- AIS: Use AIS Super Wi-Fi",
   },
   {
-    keywords: ["หาร้านไม่เจอ", "หาไม่เจอร้าน", "cannot find store"],
-    answer: "ลองสอบถามยามหรือพนักงานใกล้เคียงครับ",
-  },
-  {
-    keywords: ["ไปถูกร้านไหม", "ตรงร้านหรือยัง", "correct store"],
-    answer: "ตรวจสอบชื่อร้านจากดีโม่เดิมบนโต๊ะหรือดูที่หน้าแรกของพาโนแกรมครับ",
-  },
-  {
-    keywords: ["เริ่มงานได้ตอนไหน", "start work", "เริ่มติดตั้ง"],
-    answer: "สามารถเริ่มงานได้หลังร้านปิดแล้วเท่านั้น และประตูร้านต้องปิดลงมาครึ่งหนึ่งครับ",
-  },
-  {
-    keywords: ["dcota เมื่อไร", "เมื่อไร dcota", "when dcota"],
+    keywords: ["dcota updating", "demo updating", "updating dcota"],
     answer:
-      "โดยปกติจะเริ่ม DCOTA หลัง 2 ทุ่มครับ แต่หากร้านยังไม่ปิด ให้ขออนุญาตพนักงานก่อนทำงานครับ",
+      "If you see 'Demo update in progress, do not disturb the device', it means the DCOTA system is updating normally.",
+    followup: "You can continue other steps or take photos for the report once the update is complete.",
   },
   {
-    keywords: ["ระยะติดตั้ง", "ระยะซีเคียว", "peak distance"],
-    answer: "สามารถดูได้จากไม้บรรทัดสีขาวที่แนบมากับอุปกรณ์ครับ",
+    keywords: ["cannot find store", "wrong store", "store not found"],
+    answer: "Try asking a nearby staff member or security guard for directions.",
   },
   {
-    keywords: ["ดูข้อมูลร้าน", "เทสสปีด", "speedtest"],
-    answer: "มีเอกสารคู่มือให้ครับ ครอบคลุม ดูข้อมูลร้าน, เทสสปีดอินเทอร์เน็ต และ DCOTA พร้อมกันได้เลยครับ",
+    keywords: ["correct store", "right store", "check store name"],
+    answer: "Check the store name on the old demo table or from the Panogram home screen.",
   },
   {
-    keywords: ["ระบบซีเคียว", "security system"],
+    keywords: ["start work", "when to start", "begin installation"],
     answer:
-      "Dtac, True, Power Buy, Power Mall, Banana = เรียก PEAK\nAIS, ASP, Telewiz = เรียก Lite Security",
+      "You can start working only after the store closes, and the shutter must be halfway down before starting.",
   },
   {
-    keywords: ["เวลาร้านปิด", "closing time", "time close"],
+    keywords: ["when dcota", "dcota time", "dcota schedule"],
     answer:
-      "เวลาโดยประมาณ:\n- True, Dtac, ASP, Telewiz, Jaymart: 20:00\n- AIS: ตามเวลาห้าง (20:30–22:00)\n- Power Buy, Power Mall, Banana: 21:30–22:00",
+      "DCOTA usually starts after 8 PM. If the store is still open, ask for permission before starting.",
   },
   {
-    keywords: ["เครื่องไม่ครบ", "device missing"],
+    keywords: ["installation distance", "peak distance", "security distance"],
+    answer: "Check the white measuring ruler included with the equipment for correct installation distance.",
+  },
+  {
+    keywords: ["view store info", "speedtest", "check store data"],
+    answer: "Refer to the user guide — it includes details for viewing store info, speed testing, and DCOTA setup.",
+  },
+  {
+    keywords: ["security system", "lite security", "peak system"],
     answer:
-      "หากเครื่องไม่ครบ ไม่ต้องทำส่วนที่ขาดครับ ให้เว้นไว้และแอดมินจดปัญหาไว้ในกลุ่มครับ",
+      "Dtac, True, Power Buy, Power Mall, Banana = PEAK\nAIS, ASP, Telewiz = Lite Security",
   },
   {
-    keywords: ["wifi เชื่อมต่อไม่ได้", "wifi error"],
-    answer: "ให้พนักงานหน้าร้านช่วยตรวจสอบว่า Wi-Fi มีปัญหาหรือไม่ครับ",
+    keywords: ["closing time", "store hours", "what time close"],
+    answer:
+      "Approximate closing times:\n- True, Dtac, ASP, Telewiz, Jaymart: 8:00 PM\n- AIS: According to mall hours (8:30–10:00 PM)\n- Power Buy, Power Mall, Banana: 9:30–10:00 PM",
   },
   {
-    keywords: ["เบิก", "การเบิก", "เบิกของ"],
-    answer: "สามารถสแกน QR CODE ที่อยู่หน้า พาโนแกรม เพื่อเบิกอุปกรณ์ได้เลยครับ",
+    keywords: ["device missing", "missing equipment", "equipment incomplete"],
+    answer:
+      "If some devices are missing, skip that part and let the admin record the issue in the group chat.",
+  },
+  {
+    keywords: ["wifi error", "cannot connect wifi", "wifi not working"],
+    answer: "Ask store staff to check the Wi-Fi connection.",
+  },
+  {
+    keywords: ["request tools", "borrow tools", "get tools", "tool request"],
+    answer: "Scan the QR code on the Panogram display to request the required tools.",
   },
 ];

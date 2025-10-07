@@ -1,157 +1,68 @@
-import React, { useEffect, useState } from "react";
-import { StreamChat } from "stream-chat";
-import {
-  Chat,
-  Channel,
-  Window,
-  ChannelHeader,
-  MessageList,
-  MessageInput,
-  Thread,
-  LoadingIndicator,
-} from "stream-chat-react";
-import "stream-chat-react/css/v2/index.css";
+import React from "react";
+import { BrowserRouter as Router, Routes, Route, useNavigate } from "react-router-dom";
+import { Toaster } from "react-hot-toast";
+import ChatPage from "./pages/chat/ChatPage"; // ✅ your chatbot page
 
-import { getStreamToken } from "./services/streamToken.service";
-import { tutorialLinks } from "./config/tutorialLinks";
-import { faqAnswers } from "./config/faqAnswers";
+import "./App.css";
 
-const apiKey = "2eu4f8nrv6rs";
-const chatClient = StreamChat.getInstance(apiKey);
-let hasConnected = false;
-
-const App: React.FC = () => {
-  const [connected, setConnected] = useState(false);
-  const [channel, setChannel] = useState<any>(null);
-
-  // ✅ Connect user safely (prevent double connection)
-  useEffect(() => {
-    let isMounted = true;
-
-    const init = async () => {
-      try {
-        if (hasConnected || chatClient.userID) {
-          await chatClient.disconnectUser();
-        }
-        hasConnected = true;
-
-        const userId = "prowolo_user_" + Math.floor(Math.random() * 10000);
-        const { token } = await getStreamToken(userId);
-
-        await chatClient.connectUser(
-          {
-            id: userId,
-            name: "Prowolo User",
-            image: `https://getstream.io/random_svg/?id=${userId}`,
-          },
-          token
-        );
-
-        const channelId = `prowolo_chat_demo_${userId}`;
-        const ch = chatClient.channel("messaging", channelId, {
-          members: [userId],
-          created_by_id: userId,
-        });
-
-        await ch.watch();
-        if (isMounted) {
-          setChannel(ch);
-          setConnected(true);
-        }
-      } catch (err) {
-        console.error("Stream Chat connection failed:", err);
-      }
-    };
-
-    init();
-
-    return () => {
-      isMounted = false;
-      chatClient.disconnectUser();
-      hasConnected = false;
-    };
-  }, []);
-
-  // ✅ Chatbot auto-reply logic
-  useEffect(() => {
-    if (!channel) return;
-
-    const handleSend = async (event: any) => {
-      if (event.message.user.id !== chatClient.userID) return;
-
-      const text = event.message.text.toLowerCase();
-
-      // 1️⃣ Tutorial video
-      const videoMatch = tutorialLinks.find(t =>
-        t.keywords.some(k => text.includes(k.toLowerCase()))
-      );
-      if (videoMatch) {
-        await channel.sendMessage({
-          text: `🎬 คลิกเพื่อดูวิดีโอแนะนำ: [เปิดวิดีโอ](${videoMatch.link})`,
-        });
-        return;
-      }
-
-      // 2️⃣ FAQ
-      const faqMatch = faqAnswers.find(f =>
-        f.keywords.some(k => text.includes(k.toLowerCase()))
-      );
-      if (faqMatch) {
-        let reply = faqMatch.answer;
-        if (faqMatch.followup)
-          reply += `\n\n💡 ถ้าไม่หาย: ${faqMatch.followup}`;
-        await channel.sendMessage({ text: reply });
-        return;
-      }
-
-      // 3️⃣ Default fallback
-      await channel.sendMessage({
-        text: "ขออภัยครับ ยังไม่มีข้อมูลสำหรับคำถามนี้ 🧠 กรุณาระบุรายละเอียดเพิ่มเติม",
-      });
-    };
-
-    channel.on("message.sent", handleSend);
-    return () => channel.off("message.sent", handleSend);
-  }, [channel]);
-
-  if (!connected || !channel) return <LoadingIndicator />;
+// ✅ Simple landing page with a button to open the chatbot
+const HomePage: React.FC = () => {
+  const navigate = useNavigate();
 
   return (
     <div
       style={{
         height: "100vh",
-        width: "100%",
-        background: "#f9fafb",
         display: "flex",
         flexDirection: "column",
+        justifyContent: "center",
+        alignItems: "center",
+        background: "#f9fafb",
+        fontFamily: "Kanit, sans-serif",
       }}
     >
-      <Chat client={chatClient} theme="messaging light">
-        <Channel channel={channel}>
-          <Window>
-            <ChannelHeader />
-            <div style={{ flex: 1, overflow: "hidden" }}>
-              <MessageList messageActions={[]} />
-            </div>
-            <div
-              style={{
-                borderTop: "1px solid #e5e7eb",
-                backgroundColor: "#fff",
-                paddingBottom: "env(safe-area-inset-bottom)",
-              }}
-            >
-              <MessageInput
-                focus
-                additionalTextareaProps={{
-                  placeholder: "พิมพ์คำถามของคุณที่นี่...",
-                }}
-              />
-            </div>
-          </Window>
-          <Thread />
-        </Channel>
-      </Chat>
+      <h1 style={{ fontSize: "2rem", color: "#333", marginBottom: "1rem" }}>
+        💬 Welcome to Prowolo Chatbot
+      </h1>
+      <p style={{ marginBottom: "2rem", color: "#555" }}>
+        Ask me anything about your work, tools, or setup.
+      </p>
+      <button
+        onClick={() => navigate("/chat")}
+        style={{
+          padding: "12px 24px",
+          backgroundColor: "#2c3d92",
+          color: "#fff",
+          fontSize: "1.1rem",
+          border: "none",
+          borderRadius: "10px",
+          cursor: "pointer",
+          transition: "background 0.2s ease-in-out",
+        }}
+        onMouseEnter={(e) => ((e.target as HTMLButtonElement).style.backgroundColor = "#3e51b5")}
+        onMouseLeave={(e) => ((e.target as HTMLButtonElement).style.backgroundColor = "#2c3d92")}
+      >
+        🚀 Enter Chatbot
+      </button>
     </div>
+  );
+};
+
+// ✅ Main App
+const App: React.FC = () => {
+  return (
+    <Router>
+      <Toaster
+        position="top-center"
+        toastOptions={{
+          duration: 3000,
+        }}
+      />
+      <Routes>
+        <Route path="/" element={<HomePage />} />
+        <Route path="/chat" element={<ChatPage />} />
+      </Routes>
+    </Router>
   );
 };
 

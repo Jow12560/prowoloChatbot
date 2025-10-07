@@ -9,7 +9,7 @@ export const tutorialLinks: Tutorial[] = [
     link: "https://vimeo.com/1117672161",
   },
   {
-    keywords: ["ดีโคต้า", "deequota", "iphone quota", "ทำดีโคต้า"],
+    keywords: ["ดีโคต้า", "dquota", "iphone quota", "ทำดีโคต้า"],
     link: "https://vimeo.com/1117686316",
   },
   {
