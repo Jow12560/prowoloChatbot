@@ -24,16 +24,20 @@ const App: React.FC = () => {
   const [connected, setConnected] = useState(false);
   const [channel, setChannel] = useState<any>(null);
 
-  // 🔹 Connect user only once
+  // ✅ Connect user safely (prevent double connection)
   useEffect(() => {
+    let isMounted = true;
+
     const init = async () => {
-      if (hasConnected || chatClient.userID) return;
-      hasConnected = true;
-
-      const userId = "prowolo_user_" + Math.floor(Math.random() * 10000);
-
       try {
+        if (hasConnected || chatClient.userID) {
+          await chatClient.disconnectUser();
+        }
+        hasConnected = true;
+
+        const userId = "prowolo_user_" + Math.floor(Math.random() * 10000);
         const { token } = await getStreamToken(userId);
+
         await chatClient.connectUser(
           {
             id: userId,
@@ -50,31 +54,34 @@ const App: React.FC = () => {
         });
 
         await ch.watch();
-        setChannel(ch);
-        setConnected(true);
+        if (isMounted) {
+          setChannel(ch);
+          setConnected(true);
+        }
       } catch (err) {
         console.error("Stream Chat connection failed:", err);
       }
     };
 
     init();
+
     return () => {
-      if (chatClient.userID) chatClient.disconnectUser();
+      isMounted = false;
+      chatClient.disconnectUser();
       hasConnected = false;
     };
   }, []);
 
-  // 🔹 Reply only when user sends a message (not on every new message)
+  // ✅ Chatbot auto-reply logic
   useEffect(() => {
     if (!channel) return;
 
     const handleSend = async (event: any) => {
-      // React only when *you* send (not when server echoes back)
       if (event.message.user.id !== chatClient.userID) return;
 
       const text = event.message.text.toLowerCase();
 
-      // 1️⃣ Tutorial video keyword
+      // 1️⃣ Tutorial video
       const videoMatch = tutorialLinks.find(t =>
         t.keywords.some(k => text.includes(k.toLowerCase()))
       );
@@ -85,7 +92,7 @@ const App: React.FC = () => {
         return;
       }
 
-      // 2️⃣ FAQ keyword
+      // 2️⃣ FAQ
       const faqMatch = faqAnswers.find(f =>
         f.keywords.some(k => text.includes(k.toLowerCase()))
       );
@@ -103,7 +110,6 @@ const App: React.FC = () => {
       });
     };
 
-    // only fire once per send
     channel.on("message.sent", handleSend);
     return () => channel.off("message.sent", handleSend);
   }, [channel]);
@@ -134,7 +140,12 @@ const App: React.FC = () => {
                 paddingBottom: "env(safe-area-inset-bottom)",
               }}
             >
-              <MessageInput focus placeholder="พิมพ์คำถามของคุณที่นี่..." />
+              <MessageInput
+                focus
+                additionalTextareaProps={{
+                  placeholder: "พิมพ์คำถามของคุณที่นี่...",
+                }}
+              />
             </div>
           </Window>
           <Thread />
