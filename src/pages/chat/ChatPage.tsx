@@ -13,29 +13,34 @@ import {
 } from "stream-chat-react";
 import "stream-chat-react/css/v2/index.css";
 
-import { getStreamToken, } from "../../services/streamToken.service";
+import { getStreamToken } from "../../services/streamToken.service";
 import { tutorialLinks } from "../../config/tutorialLinks";
 import { faqAnswers } from "../../config/faqAnswers";
 
 import type { FAQEntry } from "../../config/faqAnswers";
 import type { Tutorial } from "../../config/tutorialLinks";
 
+// ✅ Global single Stream instance and connect guard
 const apiKey = "2eu4f8nrv6rs";
 const chatClient = StreamChat.getInstance(apiKey);
+let globalConnected = false;
 
 const ChatPage: React.FC = () => {
   const [connected, setConnected] = useState(false);
   const [channel, setChannel] = useState<any>(null);
   const [botMessages, setBotMessages] = useState<{ id: string; text: string }[]>([]);
   const listenerAttached = useRef(false);
-  const initDone = useRef(false);
+  const lastReplyTime = useRef<number>(0);
+  const processedIds = useRef(new Set<string>()); // ✅ Prevent re-replies
 
-  // ✅ Connect user
+  // ✅ Connect user once per session
   useEffect(() => {
-    if (initDone.current) return;
-    initDone.current = true;
-
     const connectChat = async () => {
+      if (globalConnected) {
+        console.log("⚡ Already connected to Stream, skipping...");
+        return;
+      }
+
       try {
         if (chatClient.userID) await chatClient.disconnectUser();
 
@@ -43,6 +48,7 @@ const ChatPage: React.FC = () => {
         const { token } = await getStreamToken(userId);
         if (!token) throw new Error("No token returned from backend");
 
+        console.log("🔗 Connecting Stream user:", userId);
         await chatClient.connectUser(
           {
             id: userId,
@@ -58,31 +64,25 @@ const ChatPage: React.FC = () => {
         });
 
         await ch.watch();
+        await ch.truncate(); // 🧹 Clear old chat each session
         setChannel(ch);
         setConnected(true);
+        globalConnected = true;
       } catch (err) {
         console.error("❌ Chat connection failed:", err);
       }
     };
 
     connectChat();
-
-    return () => {
-      (async () => {
-        if (chatClient.userID) await chatClient.disconnectUser();
-      })();
-    };
   }, []);
 
-  // ✅ Chatbot logic (Fuse.js + fallback)
+  // ✅ Chatbot logic (English only)
   useEffect(() => {
     if (!channel || listenerAttached.current) return;
     listenerAttached.current = true;
 
     console.log("🤖 Attaching chatbot listener...");
-    const repliedIds = new Set<string>();
 
-    // Normalize text for matching
     const normalize = (str: string) =>
       str
         .toLowerCase()
@@ -90,11 +90,11 @@ const ChatPage: React.FC = () => {
         .replace(/[^\w\s]/gi, "")
         .trim();
 
-    // Fuse configuration
     const fuseTutorials = new Fuse(tutorialLinks, {
       keys: ["keywords"],
-      threshold: 0.5, // relaxed for better long phrase match
+      threshold: 0.5,
     });
+
     const fuseFaqs = new Fuse(faqAnswers, {
       keys: ["keywords"],
       threshold: 0.45,
@@ -102,58 +102,59 @@ const ChatPage: React.FC = () => {
 
     const handleSend = async (event: any) => {
       const message = event?.message;
-      if (!message || !message.text) return;
+      if (!message?.text) return;
 
-      // Skip bot messages or duplicates
-      if (message.user.id === "prowolo-bot" || repliedIds.has(message.id)) return;
-      repliedIds.add(message.id);
+      // 🧩 Skip bot messages
+      if (message.user.id === "prowolo-bot") return;
+
+      // 🧩 Prevent duplicate replies
+      if (processedIds.current.has(message.id)) return;
+      processedIds.current.add(message.id);
+
+      // 🧩 Debounce for 500 ms
+      const now = Date.now();
+      if (now - lastReplyTime.current < 500) return;
+      lastReplyTime.current = now;
 
       const text = normalize(message.text);
       console.log("📝 Received:", text);
 
       try {
-        // Show typing indicator
         await channel.sendEvent({
           type: "typing.start",
           user: { id: "prowolo-bot", name: "Prowolo Bot 🤖" },
         });
-        await new Promise((r) => setTimeout(r, 800));
+        await new Promise((r) => setTimeout(r, 700));
 
-        // Default fallback
-        let reply = "Sorry, I don’t have information about this question yet. Please provide more details.";
+        let reply =
+          "Sorry, I don’t have information about this question yet. Please provide more details.";
 
-        // Fuse search
+        // 🔍 Fuzzy search for tutorials and FAQs
         let videoMatch: Tutorial | undefined = fuseTutorials.search(text)[0]?.item;
         let faqMatch: FAQEntry | undefined = fuseFaqs.search(text)[0]?.item;
 
-        // 🔹 Extra fallback (substring match)
-        if (!videoMatch) {
-        videoMatch = tutorialLinks.find((t) =>
+        // Fallback substring match
+        if (!videoMatch)
+          videoMatch = tutorialLinks.find((t) =>
             t.keywords.some((k) => text.includes(k.toLowerCase()))
-        );
-        }
-
-        if (!faqMatch) {
-        faqMatch = faqAnswers.find((f) =>
+          );
+        if (!faqMatch)
+          faqMatch = faqAnswers.find((f) =>
             f.keywords.some((k) => text.includes(k.toLowerCase()))
-        );
-        }
+          );
 
-
-        // 🧩 Construct reply
+        // 🧠 Build English reply
         if (videoMatch) {
-          reply = `🎬 Click here to watch tutorial video: <a href="${videoMatch.link}" target="_blank" style="color:#2c3d92; text-decoration:underline;">Open Video</a>`;
+          reply = `🎬 Click here to watch tutorial: <a href="${videoMatch.link}" target="_blank" style="color:#2c3d92;text-decoration:underline;">Open Video</a>`;
         } else if (faqMatch) {
           reply = faqMatch.answer;
-          if (faqMatch.followup) {
-            reply += `<br><br>💡 If the problem persists: ${faqMatch.followup}`;
-          }
+          if (faqMatch.followup) reply += `<br><br>💡 If the problem persists: ${faqMatch.followup}`;
         }
 
-        // Show bot message
+        // Update local UI
         setBotMessages((prev) => [...prev, { id: message.id, text: reply }]);
-      } catch (error) {
-        console.error("❌ Bot reply failed:", error);
+      } catch (err) {
+        console.error("❌ Bot reply failed:", err);
       } finally {
         await channel.sendEvent({
           type: "typing.stop",
@@ -162,8 +163,13 @@ const ChatPage: React.FC = () => {
       }
     };
 
+    channel.off("message.new");
     channel.on("message.new", handleSend);
-    return () => channel.off("message.new", handleSend);
+
+    return () => {
+      channel.off("message.new", handleSend);
+      listenerAttached.current = false;
+    };
   }, [channel]);
 
   if (!connected || !channel) return <LoadingIndicator />;
@@ -194,7 +200,7 @@ const ChatPage: React.FC = () => {
             >
               <MessageList messageActions={[]} />
 
-              {/* ✅ Bot replies (English only + clickable links) */}
+              {/* ✅ Bot replies (English only) */}
               {botMessages.map((msg) => (
                 <div
                   key={msg.id}
